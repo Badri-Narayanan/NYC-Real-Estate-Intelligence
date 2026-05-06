@@ -1,0 +1,172 @@
+project:
+  name: "nyc_real_estate_intelligence"
+  random_seed: 42
+  course_header:
+    course: "CS 513 - Final Project"
+    first_name: "Badri Narayanan"
+    last_name: "Rajendran"
+    student_id: "20030350"
+
+# Paths (relative to project root)
+paths:
+  data_raw: "data/raw"
+  data_interim: "data/interim"
+  data_processed: "data/processed"
+  data_external: "data/external"
+  models: "models"
+  reports: "reports"
+  figures: "reports/figures"
+  mlruns: "mlruns"
+  logs: "logs"
+
+# Data ingestion
+data:
+  mode: "synthetic"   # "real" or "synthetic" (overridden by .env DATA_MODE)
+  synthetic_size: 100000   # rows when in synthetic mode
+  boroughs:
+    - "MANHATTAN"
+    - "BROOKLYN"
+    - "QUEENS"
+    - "BRONX"
+    - "STATEN ISLAND"
+  years: [2022, 2023, 2024]
+  min_price: 100000
+  max_price: 15000000
+  min_sqft: 200
+  max_sqft: 20000
+
+  # Real data URLs (NYC DOF Annualized Sales)
+  nyc_sales_urls:
+    "2024_manhattan": "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_manhattan.xlsx"
+    "2024_brooklyn":  "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_brooklyn.xlsx"
+    "2024_queens":    "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_queens.xlsx"
+    "2024_bronx":     "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_bronx.xlsx"
+    "2024_statenisland": "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/rollingsales_statenisland.xlsx"
+
+# Feature engineering
+features:
+  numeric:
+    - "sqft"
+    - "lot_sqft"
+    - "year_built"
+    - "num_units"
+    - "num_floors"
+    - "building_age"
+    - "floor_area_ratio"
+    - "walk_score"
+    - "transit_score"
+    - "bike_score"
+    - "nearest_subway_m"
+    - "nearest_park_m"
+    - "crime_rate_per_1k"
+    - "school_quality_score"
+    - "median_household_income"
+    - "population_density"
+    - "crime_neighborhood_percentile"
+    - "school_neighborhood_percentile"
+  categorical:
+    - "borough"
+    - "building_class"
+    - "flood_zone_flag"
+  geospatial:
+    - "lat"
+    - "lng"
+  target: "valuation_label"
+
+  # Z-score thresholds for label creation
+  label_thresholds:
+    undervalued_z: -0.75
+    overvalued_z: 0.75
+
+# Train/test split
+split:
+  test_size: 0.20
+  val_size: 0.10
+  stratify: true
+
+# Classifier hyperparameters (search spaces for RandomizedSearchCV)
+classifiers:
+  knn:
+    param_grid:
+      classifier__n_neighbors: [3, 5, 7, 9, 11, 15, 21]
+      classifier__weights: ["uniform", "distance"]
+      classifier__p: [1, 2]
+    n_iter: 10
+
+  cart:
+    param_grid:
+      classifier__max_depth: [3, 5, 7, 10, 15, 20, null]
+      classifier__min_samples_split: [2, 5, 10, 20]
+      classifier__min_samples_leaf: [1, 2, 5, 10]
+      classifier__criterion: ["gini", "entropy"]
+    n_iter: 15
+
+  random_forest:
+    param_grid:
+      classifier__n_estimators: [100, 200]          # was [100, 200, 300, 500]
+      classifier__max_depth: [10, 20, null]          # was [5, 10, 20, null]
+      classifier__min_samples_split: [2, 5, 10]
+      classifier__max_features: ["sqrt", "log2"]
+    n_iter: 8                                        # was 20
+
+  xgboost:
+    param_grid:
+      classifier__n_estimators: [100, 200]           # was [100, 200, 300, 500]
+      classifier__learning_rate: [0.05, 0.1, 0.2]   # was [0.01, 0.05, 0.1, 0.2]
+      classifier__max_depth: [3, 5, 7]               # was [3, 5, 7, 9]
+      classifier__subsample: [0.7, 0.85, 1.0]
+      classifier__colsample_bytree: [0.7, 0.85, 1.0]
+    n_iter: 10                                       # was 25
+
+  cv_folds: 3                                        # was 5
+  scoring: "f1_macro"
+
+# Recommender
+recommender:
+  content_based:
+    feature_weights:
+      structural: 1.0
+      hyperlocal: 1.5
+      ratios: 1.0
+  collaborative:
+    n_factors: 100
+    n_epochs: 20
+    lr_all: 0.005
+    reg_all: 0.02
+  hybrid:
+    alpha: 0.6   # weight for content-based; (1-alpha) for collaborative
+  top_n: 10
+  simulated_buyers: 500
+  interactions_per_buyer: 30
+
+# Clustering
+clustering:
+  kmeans:
+    n_clusters: 8
+    n_init: 10
+    max_iter: 300
+  hierarchical:
+    n_clusters: 8
+    linkage: "ward"
+  features:
+    - "lat"
+    - "lng"
+    - "median_household_income"
+    - "crime_rate_per_1k"
+    - "walk_score"
+    - "transit_score"
+    - "school_quality_score"
+
+# LLM Agent
+agent:
+  model: "claude-sonnet-4-6"   # Anthropic Claude
+  fallback_model: "claude-haiku-4-5"
+  temperature: 0.0
+  max_tokens: 2048
+  max_iterations: 6
+
+# Streamlit
+app:
+  title: "NYC Real Estate Intelligence"
+  theme_color: "#1f77b4"
+  default_borough: "BROOKLYN"
