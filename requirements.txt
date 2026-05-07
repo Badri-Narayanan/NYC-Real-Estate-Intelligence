@@ -57,3 +57,6 @@ ruff>=0.2.0
 
 #Analytics
 pyarrow>=14.0.0
+
+#AI
+anthropic
