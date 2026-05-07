@@ -1,14 +1,3 @@
-# =============================================================================
-# Course   : CS 513 - Data Analytics & Machine Learning
-# Purpose  : Hybrid integration - takes REAL NYC DOF sales rows (which only
-#            have price/sqft/borough/year_built) and fills in the rich
-#            hyperlocal features (walk_score, transit_score, crime, schools)
-#            using *synthetic enrichment calibrated to the borough average*.
-#
-#            This is honest about what's real vs derived: every output row
-#            has a `data_source` column = "live_nyc_dof" or "synthetic".
-# =============================================================================
-
 from __future__ import annotations
 
 import numpy as np
@@ -71,10 +60,8 @@ def integrate_live_with_features(live_df: pd.DataFrame,
     if "building_class" not in df.columns or df["building_class"].isna().all():
         df["building_class"] = "Unknown"
 
-    # ------------------------------------------------------------------
     # Spatial coordinates: derive from borough bounding box if missing
     # (NYC DOF data does not include lat/lng — we approximate from borough)
-    # ------------------------------------------------------------------
     n = len(df)
     if "lat" not in df.columns or df["lat"].isna().all():
         lat_arr = np.empty(n, dtype=float)
@@ -87,9 +74,7 @@ def integrate_live_with_features(live_df: pd.DataFrame,
         df["lat"] = lat_arr
         df["lng"] = lng_arr
 
-    # ------------------------------------------------------------------
     # Distances: synthetic — no public API provides these per-property
-    # ------------------------------------------------------------------
     nearest_subway = np.clip(np.abs(rng.exponential(scale=400, size=n)), 50, 5000)
     nearest_park   = np.clip(np.abs(rng.exponential(scale=600, size=n)), 50, 4000)
     flood          = rng.choice([0, 1], size=n, p=[0.92, 0.08])
@@ -97,11 +82,8 @@ def integrate_live_with_features(live_df: pd.DataFrame,
     df["nearest_park_m"]   = nearest_park.astype(int)
     df["flood_zone_flag"]  = flood
 
-    # ------------------------------------------------------------------
     # Hyperlocal features: use real APIs (Walk Score, Census, NYC Open Data)
     # with graceful per-field fallback to synthetic borough averages.
-    # Results are cached in data/external/hyperlocal_cache/ (7-day TTL).
-    # ------------------------------------------------------------------
     log.info("Fetching real hyperlocal features via Walk Score, Census, and NYC Open Data APIs...")
     df = enrich_dataframe(df, random_seed=random_seed)
 

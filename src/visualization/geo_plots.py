@@ -178,9 +178,7 @@ def plot_price_heatmap(df: pd.DataFrame,
         )
         return None
 
-    # ------------------------------------------------------------------
     # Metric configuration
-    # ------------------------------------------------------------------
     METRIC_CONFIG = {
         "price_per_sqft": {
             "label":      "Price per sqft ($)",

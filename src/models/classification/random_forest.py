@@ -13,7 +13,7 @@ class RandomForestValuationClassifier(BaseClassifier):
             n_estimators=200,
             max_depth=20,
             max_features="sqrt",
-            n_jobs=-1,
+            n_jobs=2,
             random_state=self.random_state,
         )
 
