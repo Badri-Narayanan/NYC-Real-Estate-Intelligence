@@ -62,7 +62,6 @@ st.markdown(
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
         <div>
           <div class="hero-eyebrow">
-            <span class="material-icons" style="vertical-align:middle; font-size:18px;">location_city</span>
             &nbsp;NEW YORK CITY  &nbsp;|&nbsp;  POWERED BY MACHINE LEARNING + AI
           </div>
           <h1 class="hero-title">Buy smarter. Sell sharper.</h1>
@@ -97,7 +96,7 @@ section_header("What you can do here", icon="rocket_launch")
 c1, c2, c3 = st.columns(3, gap="medium")
 with c1:
     feature_card(
-        icon="price_check",
+        icon="check",
         title="Check if a price is fair",
         body="Type in any property's basics — borough, size, list price, walkability — "
               "and we tell you whether it's priced below, at, or above what similar nearby "
